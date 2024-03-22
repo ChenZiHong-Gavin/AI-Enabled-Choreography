@@ -17,28 +17,56 @@ for i in range(len(point_labels)):
 
 
 # animate a video of the stick figure.
-# `ghost` may be a second sequence, which will be superimposed
-# on the primary sequence.
-# If ghost_shift is given, the primary and ghost sequence will be separated laterally
-# by that amount.
 # `zcolor` may be an N-length array, where N is the number of vertices in seq, and will
 # be used to color the vertices. Typically this is set to the avg. z-value of each vtx.
 def animate_stick(seq, ghost=None, ghost_shift=0, edge_types=None, edge_opacities=None, threshold=0, edge_class=None,
-                  figsize=None, zcolor=None, pointer=None, ax_lims=(-0.4, 0.4), speed=45,
+                  zcolor=None, pointer=None, ax_lims=(-0.4, 0.4), speed=45,
                   dot_size=20, dot_alpha=0.5, lw=2.5, cmap='cool_r', pointer_color='black', cloud=False,
                   cloud_alpha=0.03, skeleton=True, skeleton_alpha=0.3):
+    """
+    :param seq:
+    :param ghost: a second sequence to superimpose on the primary sequence
+    :param ghost_shift: how far to laterally shift the ghost sequence, in dimension x
+    :param edge_types:
+    :param edge_opacities:
+    :param threshold:
+    :param edge_class:
+    :param zcolor:
+    :param pointer:
+    :param ax_lims:
+    :param speed:
+    :param dot_size:
+    :param dot_alpha:
+    :param lw:
+    :param cmap:
+    :param pointer_color:
+    :param cloud:
+    :param cloud_alpha:
+    :param skeleton:
+    :param skeleton_alpha:
+    :return:
+    """
+    if ghost_shift and ghost is not None:
+        ghost[:, :, 0] += ghost_shift
+        seq[:, :, 0] -= ghost_shift
+
+    ghost_color = 'blue'
+
     plotter = pv.Plotter(notebook=False, off_screen=True)
     plotter.open_gif("move.gif")
     for i in range(0, len(seq)):
-        plotter.clear()
-        plotter.add_mesh(pv.PolyData(seq[i]), color="black", point_size=10, opacity=dot_alpha)
+        plotter.add_mesh(pv.PolyData(seq[i]), name='point', color="black", point_size=10, opacity=dot_alpha)
+        if ghost is not None:
+            plotter.add_mesh(pv.PolyData(ghost[i]), name='ghost', color=ghost_color, point_size=10, opacity=dot_alpha)
         plotter.write_frame()
     plotter.close()
 
     plotter = pv.Plotter()
 
     def create_frame(value):
-        plotter.add_mesh(pv.PolyData(seq[int(value)]), name='cloud', color="black", point_size=10, opacity=dot_alpha)
+        plotter.add_mesh(pv.PolyData(seq[int(value)]), name='point', color="black", point_size=10, opacity=dot_alpha)
+        if ghost is not None:
+            plotter.add_mesh(pv.PolyData(ghost[int(value)]), name='ghost', color=ghost_color, point_size=10, opacity=dot_alpha)
         return
 
     plotter.add_slider_widget(create_frame, [0, len(seq) - 1], title="Frame", value=0, interaction_event="always", style="modern")
@@ -53,4 +81,8 @@ if __name__ == "__main__":
     index_start = np.random.randint(0, len(ds_all_centered) - seq_len)
     print("Seeding with frame {}".format(index_start))
     xtest = ds_all_centered[index_start:index_start + seq_len, :, :3]
-    animate_stick(xtest, figsize=(10, 8), cmap='inferno', cloud=False)
+    index_ghost = np.random.randint(0, len(ds_all_centered) - seq_len)
+    print("Seeding with frame {}".format(index_ghost))
+    xtest_ghost = ds_all_centered[index_ghost:index_ghost + seq_len, :, :3]
+    animate_stick(xtest, xtest_ghost, ghost_shift=1,
+                  cmap='inferno', cloud=False)
