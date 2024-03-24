@@ -71,9 +71,4 @@ The LSTM component is a type of recurrent neural network (RNN) that can model th
 
 [5] https://github.com/mariel-pettee/choreography
 
-## License
-
-MIT
-
----
 
