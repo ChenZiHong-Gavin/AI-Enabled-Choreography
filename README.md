@@ -8,11 +8,9 @@
 A VAE-LSTM model for generating dance choreography, built for the GSoC
 <a href="https://docs.google.com/document/d/18yE220TOWpXUddu8lRX2KDuuJUgDyL9PItDjxOjJkCI/edit" target="_blank">test</a>.</h4>
 
-
-<div style="display: flex;">
-<img src="images/animation-example-1.gif" width="50%" />
-<img src="images/animation-example-2.gif" width="50%" />
-</div>
+| Example 1                            | Example 2                            |
+| ----------------------------------- | ----------------------------------- |
+| ![animation-example](images/animation-example-1.gif) | ![animation-example](images/animation-example-2.gif) |
 
 ## Key Features
 
