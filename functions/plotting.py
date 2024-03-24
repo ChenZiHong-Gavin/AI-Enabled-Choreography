@@ -2,7 +2,6 @@ import numpy as np
 
 from functions.load_data import *
 import pyvista as pv
-from pyvista import examples
 
 # Normal, connected skeleton:
 skeleton_idxs = []
@@ -31,14 +30,12 @@ def get_line_segments(seq):
 
 # animate a video of the stick figure.
 def animate_stick(seq, ghost=None, ghost_shift=0,
-                  zcolor=None, speed=45,
-                  dot_size=7, dot_alpha=0.5, lw=2.5, skeleton=True):
+                  zcolor=None, dot_size=7, dot_alpha=0.5, lw=2.5, skeleton=True, output_gif_path="test.gif"):
     """
     :param seq: a sequence of 3D points to animate
     :param ghost: a second sequence to superimpose on the primary sequence
     :param ghost_shift: how far to laterally shift the ghost sequence, in dimension x
     :param zcolor: an N-length array, where N is the number of vertices in seq, and will be used to color the vertices.
-    :param speed:
     :param dot_size: size of the dots
     :param dot_alpha: transparency of the dots
     :param lw: line width
@@ -52,8 +49,9 @@ def animate_stick(seq, ghost=None, ghost_shift=0,
         ghost[:, :, 0] += ghost_shift
         seq[:, :, 0] -= ghost_shift
 
-    x_lines = get_line_segments(seq)
-    ghost_lines = get_line_segments(ghost) if ghost is not None else None
+    if skeleton:
+        x_lines = get_line_segments(seq)
+        ghost_lines = get_line_segments(ghost) if ghost is not None else None
 
     def draw(pl, seq, ghost, i):
         pl.add_points(seq, name='point', color="black", point_size=dot_size, opacity=dot_alpha, render_points_as_spheres=True)
@@ -81,7 +79,7 @@ def animate_stick(seq, ghost=None, ghost_shift=0,
 
 
     plotter = pv.Plotter(notebook=False, off_screen=True)
-    plotter.open_gif("move.gif")
+    plotter.open_gif(output_gif_path)
     for i in range(0, len(seq)):
         draw(plotter, seq[i], ghost[i] if ghost is not None else None, i)
         plotter.write_frame()
@@ -92,10 +90,6 @@ def animate_stick(seq, ghost=None, ghost_shift=0,
     plotter = pv.Plotter()
 
     def create_frame(value):
-        # plotter.add_points(pv.PolyData(seq[int(value)]), name='point', color="black", point_size=dot_size, opacity=dot_alpha, render_points_as_spheres=True)
-        # if ghost is not None:
-        #     plotter.add_points(pv.PolyData(ghost[int(value)]), name='ghost', color=ghost_color, point_size=dot_size, opacity=dot_alpha, render_points_as_spheres=True)
-
         draw(plotter, seq[int(value)], ghost[int(value)] if ghost is not None else None, int(value))
         return
 
@@ -106,11 +100,12 @@ def animate_stick(seq, ghost=None, ghost_shift=0,
 
 if __name__ == "__main__":
     ds_all, ds_all_centered, datasets, datasets_centered, ds_counts = load_data(pattern="../data/mariel_*.npy")
-    seq_len = 50
+    seq_len = 128
     index_start = 0
     index_start = np.random.randint(0, len(ds_all_centered) - seq_len)
     print("Seeding with frame {}".format(index_start))
     xtest = ds_all_centered[index_start:index_start + seq_len, :, :3]
+    print(xtest.shape)  # 128, 53, 3
     index_ghost = np.random.randint(0, len(ds_all_centered) - seq_len)
     print("Seeding with frame {}".format(index_ghost))
     xtest_ghost = ds_all_centered[index_ghost:index_ghost + seq_len, :, :3]

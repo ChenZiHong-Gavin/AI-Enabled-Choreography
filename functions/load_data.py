@@ -1,5 +1,4 @@
 import torch
-from torch_geometric.data import Data
 import numpy as np
 from glob import glob
 import os
@@ -83,8 +82,7 @@ skeleton_lines = [
 class MarielDataset(torch.utils.data.Dataset):
     'Characterizes a dataset for PyTorch'
 
-    def __init__(self, reduced_joints=False, xy_centering=True, seq_len=128, predicted_timesteps=1,
-                 file_path="data/mariel_*.npy", no_overlap=False):
+    def __init__(self, reduced_joints=False, xy_centering=True, seq_len=128, predicted_timesteps=1, file_path="data/mariel_*.npy", no_overlap=False):
         'Initialization'
         self.file_path = file_path
         self.seq_len = seq_len
@@ -144,25 +142,13 @@ class MarielDataset(torch.utils.data.Dataset):
             # non-overlapping phrases
             index = index * self.seq_len
             sequence = data[index:index + self.seq_len]
-            prediction_target = data[index:index + self.seq_len + self.predicted_timesteps]
+            prediction_target = data[index + self.seq_len:index + self.seq_len + self.predicted_timesteps]
         else:
             # overlapping phrases
             sequence = data[index:index + self.seq_len]
-            prediction_target = data[index:index + self.seq_len + self.predicted_timesteps]
+            prediction_target = data[index + self.seq_len:index + self.seq_len + self.predicted_timesteps]
 
-        sequence = np.transpose(sequence, [1, 0, 2])  # put n_joints first
-        sequence = sequence.reshape(
-            (data.shape[1], self.n_dim * self.seq_len))  # flatten n_dim*seq_len into one dimension (i.e. node feature)
-        prediction_target = np.transpose(prediction_target, [1, 0, 2])  # put n_joints first
-        prediction_target = prediction_target.reshape(
-            (data.shape[1], self.n_dim * (self.seq_len + self.predicted_timesteps)))
-
-        # Convert to torch objects
-        sequence = torch.Tensor(sequence)
-        prediction_target = torch.Tensor(prediction_target)
-        edge_attr = torch.Tensor(is_skeleton_edge)
-
-        return Data(x=sequence, y=prediction_target, edge_index=edge_index.t().contiguous(), edge_attr=edge_attr)
+        return sequence, prediction_target
 
 
 def load_data(pattern="data/mariel_*.npy"):
@@ -270,11 +256,10 @@ def edges(reduced_joints, seq_len):
     return torch.tensor(edge_index, dtype=torch.long), skeleton_edges_over_time, reduced_joint_indices
 
 if __name__ == "__main__":
-    dataset = MarielDataset(reduced_joints=True, xy_centering=True, seq_len=128, predicted_timesteps=1, no_overlap=False, file_path="../data/mariel_*.npy")
+    dataset = MarielDataset(reduced_joints=False, xy_centering=True, seq_len=128, predicted_timesteps=1, no_overlap=False, file_path="../data/mariel_*.npy")
     print("Number of samples in dataset:", len(dataset))
     print("Number of joints in dataset:", dataset.n_joints)
     print("Number of dimensions in dataset:", dataset.n_dim)
     print("Number of predicted timesteps in dataset:", dataset.predicted_timesteps)
-    print("First sample in dataset:", dataset[0])
-    print("Second sample in dataset:", dataset[1])
-    print("Third sample in dataset:", dataset[2])
+    print("First sample in dataset:", dataset[0][0].shape)
+    print("Second sample in dataset:", dataset[0][1].shape)
